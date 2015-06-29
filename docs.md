@@ -2,7 +2,7 @@
 
 ## Запуск сервера 
 
-Требуется Node.js > 0.10.5
+Требуется Node.js > 0.10.5. Сервер написан с помощью Express 4.
 
 ```shell
 npm install #устанавливает пакеты
@@ -12,9 +12,11 @@ node node/app.js -p=[port_number]
 ```
 Чтобы выводил лог надо переправить [здесь все поля на true](https://github.com/d-mkrtchyan-parc/PEC/blob/master/node/config/config.js#L44)
 
-### Разработка
+----- 
 
-Стили и JS собирается с помощью gulp, поэтому, чтобы изменения вошли в силу, нужно либо запустить gulp.watch
+## Разработка
+
+Стили и JS собирается с помощью gulp, поэтому, чтобы изменения вошли в силу, нужно либо запустить gulp.watch через
 ```
 $ gulp
 ```
@@ -23,6 +25,45 @@ $ gulp
 $ gulp styles
 $ gulp scripts
 ```
+### Jade
+
+Вместо HTML используется [Jade](http://jade-lang.com/), т.к. он намного лаконичнее. 
+
+Настраивается это в congih.json и [app.js](https://github.com/d-mkrtchyan-parc/PEC/blob/master/node/app.js#L44). Можно убрать, но тогда надо будет не рендерить Jade, а читать HTML файлы и отправлять их клиенту. Модифицировать нужно будет [все запросы типа `*.tpl`](https://github.com/d-mkrtchyan-parc/PEC/blob/master/node/app.js#L134)
+
+Например:
+```js
+app.get('/*.tpl', function (req, res, next) {
+  	var	originalUrl = req.params[0],
+  		url = originalUrl.split('/'),
+		name = url.pop(),
+		resolveName, model, data, file;
+	
+	name = utils.retrive(url, name, "html");
+	file = config.root + config.views + name + '.html';
+	
+	fs.readFile(file, {encoding: 'utf-8'}, function(err, data){
+		if(err){
+			res.send('Sorry, not fount.');
+		}else{
+			res.send(data);
+		}
+		next();
+	});
+});
+```
+
+**Вниманиe!!!** : Все ссылки на шаблоны внутри кода обозначены как `.tpl`, чтобы потом можно было выбирать движок шаблонов. Нельзя с текущим кодом сочетать **и HTML и Jade**. Для этого нужно написать отдельный express-handler, который будет анализировать запрос на предмет расширения файла. 
+
+*Я рекомендую оставить Jade т.к. он сильно упрощает синтаксис верстки.* 
+
+-----
+
+## Управление констурктором
+
+### Переменные шаблона
+
+В самом [шаблоне письма](https://github.com/d-mkrtchyan-parc/PEC/blob/master/public/jade/table.jade) есть переменные, которые интерполируются прямо из контроллера `mainCtrl`, например, номер телефона. Или инициализируются прямо в шаблоне, например, [фон письма](https://github.com/d-mkrtchyan-parc/PEC/blob/master/public/jade/index.jade#L87). Добавить дополнительную переменную можно в контроллер `mainCtrl` и связать ее с шаблоном письма напрямую с помощью Mustache-синтаксиса.
 
 ### Блоки и данные
 
@@ -71,44 +112,14 @@ div(style="...")
 
 Если данные динамические, и конфигурируются через конструктор, то св-во `form` должно быть равно true, а форма для связывания данных с моделью будет лежать в папке jade/forms/{{type}}.
 
-## Компиляция
+### Компиляция
 
 Компиляцией занята директива [letter](https://github.com/d-mkrtchyan-parc/PEC/blob/master/public/static/js/modules/ng/directives.js#L50).
 Директива вычищает (или должна вычищать) все следы angular (ng-атрибуты и комментарии).
 
-## JADE
+### Как добавить новый блок?
 
-Вместо HTML используется Jade, т.к. он намного лаконичнее. 
-
-Настраивается это в congih.json и [app.js](https://github.com/d-mkrtchyan-parc/PEC/blob/master/node/app.js#L44). Можно убрать, но тогда надо будет не рендерить Jade, а читать HTML файлы и отправлять их клиенту. Модифицировать нужно будет [все запросы типа `*.tpl`](https://github.com/d-mkrtchyan-parc/PEC/blob/master/node/app.js#L134)
-
-Например:
-```js
-app.get('/*.tpl', function (req, res, next) {
-  	var	originalUrl = req.params[0],
-  		url = originalUrl.split('/'),
-		name = url.pop(),
-		resolveName, model, data, file;
-	
-	name = utils.retrive(url, name, "html");
-	file = config.root + config.views + name + '.html';
-	
-	fs.readFile(file, {encoding: 'utf-8'}, function(err, data){
-		if(err){
-			res.send('Sorry, not fount.');
-		}else{
-			res.send(data);
-		}
-		next();
-	});
-});
-```
-
-**Вниманиe!!!** : Все ссылки на шаблоны внутри кода обозначены как `.tpl`, чтобы потом можно было выбирать движок шаблонов.
-
-## Как добавить новый блок?
-
-### Статичный блок
+#### Статичный блок
 Допустим нужно добавить статичный блок рекламы. Нужно завести файл в котором будет верстка этого блока, например:
 
 Файл: jade/template/ad.jade
@@ -137,7 +148,7 @@ div.static-template
 
 Блок готов. Для того, чтобы заводить похожие блоки нужно будет копировать их в fields.json и руками изменять данные в св-ве `data`. Очевидно это не очень удобно и приемлемо только для тех типов блоков, которые не имеют точной привязки для конфигурации и их значения проще захардкодить (например. ribbon).
 
-###Динамический блок
+####Динамический блок
 Теперь сделаем блок динамически конфигурируемым. Для этого нужно сделать св-во `form` ранвым `true` и сверстать шаблон формы, в которой мы будет связывать представление с моделью. Создадим файл:
 
 Файл: jade/forms/ad.tpl
@@ -156,12 +167,14 @@ div
 
 С помощью этой формы Angular.js будет связывать данные с этим представлением и теперь в конструкторе можно будет открыть эту форму кликом на название блока в списке блоков и задать для каждого блока свои значения данных прямо в редакторе.
 
-## Аутентификация
+### Аутентификация
 
 Принцип обычной HTTP-AUTH через пост-запрос, хэширования и шифрования нет.
 CVS-файл c парами логин/пароль лежит в [node/users.htpasswd](https://github.com/d-mkrtchyan-parc/PEC/blob/master/node/users.htpasswd)
 
-## Клиентский стэк и REST
+-----
+
+### Клиентский стэк и REST
 
 Приложение на клиенте запускается в файле [launcher.js](https://github.com/d-mkrtchyan-parc/PEC/blob/master/public/static/js/app/launcher.js)
 
