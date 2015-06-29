@@ -71,11 +71,90 @@ div(style="...")
 
 Если данные динамические, и конфигурируются через конструктор, то св-во `form` должно быть равно true, а форма для связывания данных с моделью будет лежать в папке jade/forms/{{type}}.
 
-
 ## Компиляция
 
 Компиляцией занята директива [letter](https://github.com/d-mkrtchyan-parc/PEC/blob/master/public/static/js/modules/ng/directives.js#L50).
 Директива вычищает (или должна вычищать) все следы angular (ng-атрибуты и комментарии).
+
+## JADE
+
+Вместо HTML используется Jade, т.к. он намного лаконичнее. 
+
+Настраивается это в congih.json и [app.js](https://github.com/d-mkrtchyan-parc/PEC/blob/master/node/app.js#L44). Можно убрать, но тогда надо будет не рендерить Jade, а читать HTML файлы и отправлять их клиенту. Модифицировать нужно будет [все запросы типа `*.tpl`](https://github.com/d-mkrtchyan-parc/PEC/blob/master/node/app.js#L134)
+
+Например:
+```js
+app.get('/*.tpl', function (req, res, next) {
+  	var	originalUrl = req.params[0],
+  		url = originalUrl.split('/'),
+		name = url.pop(),
+		resolveName, model, data, file;
+	
+	name = utils.retrive(url, name, "html");
+	file = config.root + config.views + name + '.html';
+	
+	fs.readFile(file, {encoding: 'utf-8'}, function(err, data){
+		if(err){
+			res.send('Sorry, not fount.');
+		}else{
+			res.send(data);
+		}
+		next();
+	});
+});
+```
+
+**Вниманиe!!!** : Все ссылки на шаблоны внутри кода обозначены как `.tpl`, чтобы потом можно было выбирать движок шаблонов.
+
+## Как добавить новый блок?
+
+### Статичный блок
+Допустим нужно добавить статичный блок рекламы. Нужно завести файл в котором будет верстка этого блока, например:
+
+Файл: jade/template/ad.jade
+```jade
+div.static-template
+ p {{field.data.title ? field.data.title : "Заголовок-по-умолчанию"}}
+ p {{field.data.message}}
+```
+Теперь чтобы блок подгружался нам нужно завести для него конфигурационный объект в fields.json:
+```js
+{
+  "id" : <<ID>>,
+  "name" : "Advertismen",
+  "type":"t", // t-текст (влияет на цвет блока в констр-ре)
+  "template":"jade/template/ad.tpl",
+  "form": false,
+  "repeat":true,
+  "quantitable":false,
+  "disabled":false,
+  "data" : {
+    "title" : "Заголовок блока",
+    "message": "Реклама!"
+   }
+}
+```
+
+Блок готов. Для того, чтобы заводить похожие блоки нужно будет копировать их в fields.json и руками изменять данные в св-ве `data`. Очевидно это не очень удобно и приемлемо только для тех типов блоков, которые не имеют точной привязки для конфигурации и их значения проще захардкодить (например. ribbon).
+
+###Динамический блок
+Теперь сделаем блок динамически конфигурируемым. Для этого нужно сделать св-во `form` ранвым `true` и сверстать шаблон формы, в которой мы будет связывать представление с моделью. Создадим файл:
+
+Файл: jade/forms/ad.tpl
+```jade
+div
+	form
+		input(	type="text", 
+			ng-model="field.data.title",
+			value="{{field.data.title}}",
+			placeholder="Заголовок рекламы")
+		input(	type="text", 
+			ng-model="field.data.message",
+			value="{{field.data.message}}",
+			placeholder="Сообщение")
+```
+
+С помощью этой формы Angular.js будет связывать данные с этим представлением и теперь в конструкторе можно будет открыть эту форму кликом на название блока в списке блоков и задать для каждого блока свои значения данных прямо в редакторе.
 
 ## Аутентификация
 
