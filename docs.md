@@ -161,4 +161,8 @@ div
 Принцип обычной HTTP-AUTH через пост-запрос, хэширования и шифрования нет.
 CVS-файл c парами логин/пароль лежит в [node/users.htpasswd](https://github.com/d-mkrtchyan-parc/PEC/blob/master/node/users.htpasswd)
 
-## Стэк
+## Клиентский стэк и REST
+
+Приложение на клиенте запускается в файле [launcher.js](https://github.com/d-mkrtchyan-parc/PEC/blob/master/public/static/js/app/launcher.js)
+
+REST API реализован с помощью [Warden.js](https://github.com/zefirka/Warden.js)
