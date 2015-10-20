@@ -9,7 +9,7 @@ html(lang=language, ng-app='pudra')
 		.wrapper.notready
 			h1 Конструктор рассылки для Pudra
 			hr
-			
+
 			table.main(main-table="true")
 				tr
 					td(colspan="2")
@@ -66,6 +66,7 @@ html(lang=language, ng-app='pudra')
 													option(value="http://pudra.ru/skins/pudra/customer/static/img/backgrounds/Pudra-Snow.png") Снежинки
 													option(value='http://pudra.ru/skins/pudra/mail/email_letter/img/textures/stvalpattern.png') 14-февраля
 													option(value='http://pudra.ru/images/detailed/73/23-february-pattern.png') Камуфляж
+													option(value='http://pudra.ru/skins/pudra/customer/static/img/backgrounds/halloween.png') Halloween
 								h3 Advanced
 									.gen-data
 										form.form-horizontal#vars
@@ -77,7 +78,7 @@ html(lang=language, ng-app='pudra')
 												label.col-sm-2.control-label Высота блока товара
 												.col-sm-10
 													input.form-control(type='text' ng-model="settings.height" value="{{settings.heigth}}")
-													
+
 								h3 Responsive test
 									.gen-data
 										form.form-horizontal#responsive
@@ -100,7 +101,7 @@ html(lang=language, ng-app='pudra')
 		p {{message}}
 		div(ng-if="resulting")
 			textarea.form-control(value="{{resulting}}" ng-model="resulting" style="resize:vertical;" rows="12")
-		
+
 		a(ng-click="collapse()" class="btn btn-primary") Закрыть
-		
+
 .builder(style='display:none')
